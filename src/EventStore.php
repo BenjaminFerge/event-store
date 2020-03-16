@@ -68,6 +68,19 @@ class EventStore
         return $event;
     }
 
+    public function rollback(UuidInterface $streamId, Event $event)
+    {
+        $streamVersion = $this->repo->getVersionForStream($streamId);
+        $lastEventVersion = $event->version;
+
+        if ($streamVersion == $lastEventVersion) {
+            
+            $this->repo->deleteEvent((string)$event->id);
+
+            $this->repo->incrementStream($streamId, $streamVersion - 1);
+        }
+    }
+
     public function addProjection(Projection $projection): void
     {
         $this->projections[$projection->getEventStream()->id] = $projection;
